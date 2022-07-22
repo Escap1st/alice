@@ -1,120 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'package:alice/core/alice_utils.dart';
-import 'package:alice/helper/alice_alert_helper.dart';
 import 'package:alice/helper/alice_conversion_helper.dart';
 import 'package:alice/model/alice_http_call.dart';
 import 'package:alice/utils/alice_parser.dart';
-import 'package:flutter/material.dart';
-import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class AliceSaveHelper {
   static const JsonEncoder _encoder = JsonEncoder.withIndent('  ');
-
-  /// Top level method used to save calls to file
-  static void saveCalls(
-    BuildContext context,
-    List<AliceHttpCall> calls,
-    Brightness brightness,
-  ) {
-    _checkPermissions(context, calls, brightness);
-  }
-
-  static void _checkPermissions(
-    BuildContext context,
-    List<AliceHttpCall> calls,
-    Brightness brightness,
-  ) async {
-    final status = await Permission.storage.status;
-    if (status.isGranted) {
-      _saveToFile(
-        context,
-        calls,
-        brightness,
-      );
-    } else {
-      final status = await Permission.storage.request();
-
-      if (status.isGranted) {
-        _saveToFile(context, calls, brightness);
-      } else {
-        AliceAlertHelper.showAlert(
-          context,
-          "Permission error",
-          "Permission not granted. Couldn't save logs.",
-          brightness: brightness,
-        );
-      }
-    }
-  }
-
-  static Future<String> _saveToFile(
-    BuildContext context,
-    List<AliceHttpCall> calls,
-    Brightness brightness,
-  ) async {
-    try {
-      if (calls.isEmpty) {
-        AliceAlertHelper.showAlert(
-          context,
-          "Error",
-          "There are no logs to save",
-          brightness: brightness,
-        );
-        return "";
-      }
-      final bool isAndroid = Platform.isAndroid;
-
-      Directory? externalDir;
-      if (isAndroid) {
-        externalDir = await getExternalStorageDirectory();
-      } else {
-        externalDir = await getApplicationDocumentsDirectory();
-      }
-      if (externalDir != null) {
-        final String fileName =
-            "alice_log_${DateTime.now().millisecondsSinceEpoch}.txt";
-        final File file = File("${externalDir.path}/$fileName");
-        file.createSync();
-        final IOSink sink = file.openWrite(mode: FileMode.append);
-        sink.write(await _buildAliceLog());
-        calls.forEach((AliceHttpCall call) {
-          sink.write(_buildCallLog(call));
-        });
-        await sink.flush();
-        await sink.close();
-        AliceAlertHelper.showAlert(
-          context,
-          "Success",
-          "Successfully saved logs in ${file.path}",
-          secondButtonTitle: isAndroid ? "View file" : null,
-          secondButtonAction: () => isAndroid ? OpenFile.open(file.path) : null,
-          brightness: brightness,
-        );
-        return file.path;
-      } else {
-        AliceAlertHelper.showAlert(
-          context,
-          "Error",
-          "Failed to save http calls to file",
-        );
-      }
-    } catch (exception) {
-      AliceAlertHelper.showAlert(
-        context,
-        "Error",
-        "Failed to save http calls to file",
-        brightness: brightness,
-      );
-      AliceUtils.log(exception.toString());
-    }
-
-    return "";
-  }
 
   static Future<String> _buildAliceLog() async {
     final StringBuffer stringBuffer = StringBuffer();

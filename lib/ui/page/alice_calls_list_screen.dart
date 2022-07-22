@@ -134,9 +134,6 @@ class _AliceCallsListScreenState extends State<AliceCallsListScreen> {
     if (menuItem.title == "Stats") {
       _showStatsScreen();
     }
-    if (menuItem.title == "Save") {
-      _saveToFile();
-    }
   }
 
   Widget _buildCallsListWrapper() {
@@ -314,10 +311,6 @@ class _AliceCallsListScreenState extends State<AliceCallsListScreen> {
         builder: (context) => AliceStatsScreen(widget._aliceCore),
       ),
     );
-  }
-
-  void _saveToFile() async {
-    aliceCore.saveHttpRequests(context);
   }
 
   void _updateSearchQuery(String query) {
