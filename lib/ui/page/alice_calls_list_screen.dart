@@ -32,7 +32,6 @@ class _AliceCallsListScreenState extends State<AliceCallsListScreen> {
     _menuItems.add(AliceMenuItem("Sort", Icons.sort));
     _menuItems.add(AliceMenuItem("Delete", Icons.delete));
     _menuItems.add(AliceMenuItem("Stats", Icons.insert_chart));
-    _menuItems.add(AliceMenuItem("Save", Icons.save));
   }
 
   @override
