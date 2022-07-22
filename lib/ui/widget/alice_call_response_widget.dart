@@ -17,7 +17,6 @@ class AliceCallResponseWidget extends StatefulWidget {
 class _AliceCallResponseWidgetState
     extends AliceBaseCallDetailsWidgetState<AliceCallResponseWidget> {
   static const _imageContentType = "image";
-  static const _videoContentType = "video";
   static const _jsonContentType = "json";
   static const _xmlContentType = "xml";
   static const _textContentType = "text";
