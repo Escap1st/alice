@@ -60,7 +60,7 @@ class AliceParser {
 
       return bodyContent;
     } catch (exception) {
-      return _parseFailedText + body.toString();
+      return '$_parseFailedText: ${exception.toString()}';
     }
   }
 
