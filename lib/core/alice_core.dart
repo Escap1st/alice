@@ -24,8 +24,7 @@ class AliceCore {
   final bool darkTheme;
 
   /// Rx subject which contains all intercepted http calls
-  final BehaviorSubject<List<AliceHttpCall>> callsSubject =
-      BehaviorSubject.seeded([]);
+  final BehaviorSubject<List<AliceHttpCall>> callsSubject = BehaviorSubject.seeded([]);
 
   /// Icon url for notification
   final String notificationIcon;
@@ -88,24 +87,24 @@ class AliceCore {
 
   void _initializeNotificationsPlugin() {
     _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    final initializationSettingsAndroid =
-        AndroidInitializationSettings(notificationIcon);
-    const initializationSettingsIOS = IOSInitializationSettings();
+    final initializationSettingsAndroid = AndroidInitializationSettings(notificationIcon);
+    const initializationSettingsIOS = DarwinInitializationSettings();
     final initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
     _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onSelectNotification: _onSelectedNotification,
+      onDidReceiveNotificationResponse: (response) => _onSelectedNotification(response.payload),
+      onDidReceiveBackgroundNotificationResponse: (response) =>
+          _onSelectedNotification(response.payload),
     );
   }
 
   void _onCallsChanged() async {
     if (callsSubject.value.isNotEmpty) {
       _notificationMessage = _getNotificationMessage();
-      if (_notificationMessage != _notificationMessageShown &&
-          !_notificationProcessing) {
+      if (_notificationMessage != _notificationMessageShown && !_notificationProcessing) {
         await _showLocalNotification();
         _onCallsChanged();
       }
@@ -174,8 +173,7 @@ class AliceCore {
         .toList()
         .length;
 
-    final int loadingCalls =
-        calls.where((call) => call.loading).toList().length;
+    final int loadingCalls = calls.where((call) => call.loading).toList().length;
 
     final StringBuffer notificationsMessage = StringBuffer();
     if (loadingCalls > 0) {
@@ -217,8 +215,7 @@ class AliceCore {
       playSound: false,
       largeIcon: DrawableResourceAndroidBitmap(notificationIcon),
     );
-    const iOSPlatformChannelSpecifics =
-        IOSNotificationDetails(presentSound: false);
+    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: false);
     final platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
@@ -277,8 +274,8 @@ class AliceCore {
     }
     selectedCall.loading = false;
     selectedCall.response = response;
-    selectedCall.duration = response.time.millisecondsSinceEpoch -
-        selectedCall.request!.time.millisecondsSinceEpoch;
+    selectedCall.duration =
+        response.time.millisecondsSinceEpoch - selectedCall.request!.time.millisecondsSinceEpoch;
 
     callsSubject.add([...callsSubject.value]);
   }
