@@ -22,34 +22,9 @@ bool _notificationProcessing = false;
 
 Future<void> onSelectedNotification(NotificationResponse response) async {
   assert(response.payload != null, "payload can't be null");
-  navigateToCallListScreen(AliceCore.instance);
+  AliceCore.instance.navigateToCallListScreen();
   return;
 }
-
-/// Opens Http calls inspector. This will navigate user to the new fullscreen
-/// page where all listened http calls can be viewed.
-void navigateToCallListScreen(AliceCore aliceCore) {
-  final context = getContext(aliceCore.navigatorKey);
-  if (context == null) {
-    AliceUtils.log(
-      "Cant start Alice HTTP Inspector. Please add NavigatorKey to your application",
-    );
-    return;
-  }
-  if (!_isInspectorOpened) {
-    _isInspectorOpened = true;
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AliceCallsListScreen(aliceCore),
-      ),
-    ).then((onValue) => _isInspectorOpened = false);
-  }
-}
-
-/// Get context from navigator key. Used to open inspector route.
-BuildContext? getContext(GlobalKey<NavigatorState>? navigatorKey) =>
-    navigatorKey?.currentState?.overlay?.context;
 
 class AliceCore {
   static late AliceCore instance;
@@ -101,7 +76,7 @@ class AliceCore {
     if (showInspectorOnShake) {
       _shakeDetector = ShakeDetector.autoStart(
         onPhoneShake: () {
-          navigateToCallListScreen(this);
+          navigateToCallListScreen();
         },
         shakeThresholdGravity: 5,
       );
@@ -135,6 +110,30 @@ class AliceCore {
       onDidReceiveBackgroundNotificationResponse: onSelectedNotification,
     );
   }
+
+  /// Opens Http calls inspector. This will navigate user to the new fullscreen
+  /// page where all listened http calls can be viewed.
+  void navigateToCallListScreen() {
+    final context = getContext();
+    if (context == null) {
+      AliceUtils.log(
+        "Cant start Alice HTTP Inspector. Please add NavigatorKey to your application",
+      );
+      return;
+    }
+    if (!_isInspectorOpened) {
+      _isInspectorOpened = true;
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AliceCallsListScreen(this),
+        ),
+      ).then((onValue) => _isInspectorOpened = false);
+    }
+  }
+
+  /// Get context from navigator key. Used to open inspector route.
+  BuildContext? getContext() => navigatorKey?.currentState?.overlay?.context;
 
   void _onCallsChanged() async {
     if (callsSubject.value.isNotEmpty) {

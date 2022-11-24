@@ -105,7 +105,7 @@ class Alice {
   /// Opens Http calls inspector. This will navigate user to the new fullscreen
   /// page where all listened http calls can be viewed.
   void showInspector() {
-    navigateToCallListScreen(_aliceCore);
+    _aliceCore.navigateToCallListScreen();
   }
 
   /// Get chopper interceptor. This should be added to Chopper instance.
