@@ -20,9 +20,9 @@ String? _notificationMessage;
 String? _notificationMessageShown;
 bool _notificationProcessing = false;
 
-Future<void> onSelectedNotification(AliceCore aliceCore, String? payload) async {
-  assert(payload != null, "payload can't be null");
-  navigateToCallListScreen(aliceCore);
+Future<void> onSelectedNotification(NotificationResponse response) async {
+  assert(response.payload != null, "payload can't be null");
+  navigateToCallListScreen(AliceCore.instance);
   return;
 }
 
@@ -52,6 +52,8 @@ BuildContext? getContext(GlobalKey<NavigatorState>? navigatorKey) =>
     navigatorKey?.currentState?.overlay?.context;
 
 class AliceCore {
+  static late AliceCore instance;
+
   /// Should user be notified with notification if there's new request catched
   /// by Alice
   final bool showNotification;
@@ -105,6 +107,8 @@ class AliceCore {
       );
     }
     _brightness = darkTheme ? Brightness.dark : Brightness.light;
+
+    instance = this;
   }
 
   /// Dispose subjects and subscriptions
@@ -127,10 +131,8 @@ class AliceCore {
     );
     _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (response) =>
-          onSelectedNotification(this, response.payload),
-      onDidReceiveBackgroundNotificationResponse: (response) =>
-          onSelectedNotification(this, response.payload),
+      onDidReceiveNotificationResponse: onSelectedNotification,
+      onDidReceiveBackgroundNotificationResponse: onSelectedNotification,
     );
   }
 
