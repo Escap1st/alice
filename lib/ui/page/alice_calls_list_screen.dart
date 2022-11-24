@@ -280,7 +280,7 @@ class _AliceCallsListScreenState extends State<AliceCallsListScreen> {
 
   void _onListItemClicked(AliceHttpCall call) {
     Navigator.push<void>(
-      widget._aliceCore.getContext()!,
+      getContext(widget._aliceCore.navigatorKey)!,
       MaterialPageRoute(
         builder: (context) => AliceCallDetailsScreen(call, widget._aliceCore),
       ),
@@ -305,7 +305,7 @@ class _AliceCallsListScreenState extends State<AliceCallsListScreen> {
 
   void _showStatsScreen() {
     Navigator.push<void>(
-      aliceCore.getContext()!,
+      getContext(aliceCore.navigatorKey)!,
       MaterialPageRoute(
         builder: (context) => AliceStatsScreen(widget._aliceCore),
       ),

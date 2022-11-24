@@ -11,6 +11,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:rxdart/rxdart.dart';
 
+late FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
+Brightness _brightness = Brightness.light;
+bool _isInspectorOpened = false;
+ShakeDetector? _shakeDetector;
+StreamSubscription? _callsSubscription;
+String? _notificationMessage;
+String? _notificationMessageShown;
+bool _notificationProcessing = false;
+
+Future<void> onSelectedNotification(AliceCore aliceCore, String? payload) async {
+  assert(payload != null, "payload can't be null");
+  navigateToCallListScreen(aliceCore);
+  return;
+}
+
+/// Opens Http calls inspector. This will navigate user to the new fullscreen
+/// page where all listened http calls can be viewed.
+void navigateToCallListScreen(AliceCore aliceCore) {
+  final context = getContext(aliceCore.navigatorKey);
+  if (context == null) {
+    AliceUtils.log(
+      "Cant start Alice HTTP Inspector. Please add NavigatorKey to your application",
+    );
+    return;
+  }
+  if (!_isInspectorOpened) {
+    _isInspectorOpened = true;
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AliceCallsListScreen(aliceCore),
+      ),
+    ).then((onValue) => _isInspectorOpened = false);
+  }
+}
+
+/// Get context from navigator key. Used to open inspector route.
+BuildContext? getContext(GlobalKey<NavigatorState>? navigatorKey) =>
+    navigatorKey?.currentState?.overlay?.context;
+
 class AliceCore {
   /// Should user be notified with notification if there's new request catched
   /// by Alice
@@ -39,15 +79,7 @@ class AliceCore {
   ///Flag used to show/hide share button
   final bool? showShareButton;
 
-  late FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin;
   GlobalKey<NavigatorState>? navigatorKey;
-  Brightness _brightness = Brightness.light;
-  bool _isInspectorOpened = false;
-  ShakeDetector? _shakeDetector;
-  StreamSubscription? _callsSubscription;
-  String? _notificationMessage;
-  String? _notificationMessageShown;
-  bool _notificationProcessing = false;
 
   /// Creates alice core instance
   AliceCore(
@@ -67,7 +99,7 @@ class AliceCore {
     if (showInspectorOnShake) {
       _shakeDetector = ShakeDetector.autoStart(
         onPhoneShake: () {
-          navigateToCallListScreen();
+          navigateToCallListScreen(this);
         },
         shakeThresholdGravity: 5,
       );
@@ -95,9 +127,10 @@ class AliceCore {
     );
     _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (response) => _onSelectedNotification(response.payload),
+      onDidReceiveNotificationResponse: (response) =>
+          onSelectedNotification(this, response.payload),
       onDidReceiveBackgroundNotificationResponse: (response) =>
-          _onSelectedNotification(response.payload),
+          onSelectedNotification(this, response.payload),
     );
   }
 
@@ -110,36 +143,6 @@ class AliceCore {
       }
     }
   }
-
-  Future<void> _onSelectedNotification(String? payload) async {
-    assert(payload != null, "payload can't be null");
-    navigateToCallListScreen();
-    return;
-  }
-
-  /// Opens Http calls inspector. This will navigate user to the new fullscreen
-  /// page where all listened http calls can be viewed.
-  void navigateToCallListScreen() {
-    final context = getContext();
-    if (context == null) {
-      AliceUtils.log(
-        "Cant start Alice HTTP Inspector. Please add NavigatorKey to your application",
-      );
-      return;
-    }
-    if (!_isInspectorOpened) {
-      _isInspectorOpened = true;
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AliceCallsListScreen(this),
-        ),
-      ).then((onValue) => _isInspectorOpened = false);
-    }
-  }
-
-  /// Get context from navigator key. Used to open inspector route.
-  BuildContext? getContext() => navigatorKey?.currentState?.overlay?.context;
 
   String _getNotificationMessage() {
     final List<AliceHttpCall> calls = callsSubject.value;
